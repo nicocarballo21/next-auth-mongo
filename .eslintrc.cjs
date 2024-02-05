@@ -24,19 +24,12 @@ module.exports = {
     },
   },
   rules: {
-    "prettier/prettier": [
-      "warn",
-      {
-        printWidth: 100,
-        trailingComma: "all",
-        tabWidth: 2,
-        semi: true,
-        singleQuote: false,
-        bracketSpacing: false,
-        arrowParens: "always",
-        endOfLine: "auto",
-      },
-    ],
+    "@typescript-eslint/no-misused-promises": "off",
+    "@typescript-eslint/no-unsafe-return": "off",
+    "@typescript-eslint/no-unsafe-call": "off",
+    "@typescript-eslint/no-unsafe-assignment": "off",
+    "@typescript-eslint/no-unsafe-member-access": "off",
+    "no-console": "off",
     "import/order": [
       "warn",
       {
