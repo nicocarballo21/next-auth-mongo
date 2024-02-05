@@ -6,16 +6,16 @@ import {useEffect} from "react";
 import SignInForm from "@/components/SignInForm";
 
 export default function Login() {
-  const session = useSession();
+  const {status} = useSession();
   const router = useRouter();
 
-  console.log(session);
-
   useEffect(() => {
-    if (session.status === "authenticated") {
+    if (status === "authenticated") {
       router.replace("/dashboard");
     }
-  }, [router, session.status]);
+  }, [router, status]);
+
+  if (status === "loading") return <div>Loading...</div>;
 
   return <SignInForm />;
 }

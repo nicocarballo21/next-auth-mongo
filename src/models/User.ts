@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 
-import type {HydratedDocument, InferSchemaType, Model} from "mongoose";
+import type {Model} from "mongoose";
 
 import mongoose, {Schema, model} from "mongoose";
 import bcrypt from "bcryptjs";
 
-interface Iuser {
+export interface Iuser {
   email: string;
   name: string;
   password: string;
@@ -14,9 +14,10 @@ interface Iuser {
 // Put all user instance methods in this interface:
 interface IuserMethods {
   comparePassword: (enteredPassword: string) => Promise<boolean>;
+  userExist: (email: string) => Promise<Iuser | null>;
 }
 
-type UserModel = Model<Iuser, object, IuserMethods>;
+export type UserModel = Model<Iuser, object, IuserMethods>;
 
 const userSchema = new Schema<Iuser, UserModel, IuserMethods>(
   {
@@ -31,10 +32,10 @@ const userSchema = new Schema<Iuser, UserModel, IuserMethods>(
     },
     password: {
       type: String,
-      required: true,
+      required: false,
     },
   },
-  {timestamps: true},
+  {timestamps: true, toJSON: {getters: true, virtuals: false}},
 );
 
 userSchema.pre("save", async function (next) {
@@ -53,6 +54,13 @@ userSchema.pre("save", async function (next) {
 
 userSchema.methods.comparePassword = async function (enteredPassword: string) {
   return await bcrypt.compare(enteredPassword, this.password);
+};
+
+userSchema.methods.toAuthJson = function () {
+  return {
+    name: this.name,
+    email: this.email,
+  };
 };
 
 userSchema.methods.userExists = async function (email: string) {

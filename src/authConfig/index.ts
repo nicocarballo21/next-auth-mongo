@@ -1,7 +1,9 @@
+/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/require-await */
 import type {AuthOptions} from "next-auth";
 
 import CredentialsProvider from "next-auth/providers/credentials";
+import GitHubProvider from "next-auth/providers/github";
 
 import connectMongoDb from "@/lib/mongo/mongoConnection";
 import User from "@/models/User";
@@ -26,12 +28,23 @@ const options: AuthOptions = {
           });
 
           if (user) {
-            return await user.comparePassword(credentials.password);
+            const isValid = await user.comparePassword(credentials.password);
+
+            const jsonUser = user.toAuthJson();
+
+            if (isValid) return jsonUser;
+            else return null;
           }
         } catch (error) {
-          return Response.json({error: "Invalid credentials"});
+          console.log(error, "error");
+
+          return null;
         }
       },
+    }),
+    GitHubProvider({
+      clientId: process.env.GITHUB_CLIENT_ID ?? "",
+      clientSecret: process.env.GITHUB_CLIENT_SECRET ?? "",
     }),
   ],
   pages: {
@@ -39,21 +52,48 @@ const options: AuthOptions = {
     signIn: "/auth/signin",
   },
   callbacks: {
-    async jwt({token, account}) {
-      if (account) {
-        token.accessToken = account.access_token;
-        token.email = account.email as string;
-      }
+    async jwt({token, user}) {
+      token.user = user;
 
       return token;
     },
+
     async session({session, token}) {
-      if (session.user) {
-        session.user.name = token.name;
-        session.user.email = token.email;
-      }
+      session.user = token;
 
       return session;
+    },
+
+    async signIn({user, account}) {
+      if (account?.provider === "credentials") return true;
+
+      if (account?.provider === "github") {
+        await connectMongoDb();
+
+        try {
+          const existingUser = await User.findOne({email: user.email!});
+
+          if (!existingUser) {
+            const newUser = new User({
+              email: user.email,
+              name: user.name,
+              password: "",
+            });
+
+            await newUser.save();
+
+            return true;
+          }
+
+          return true;
+        } catch (error) {
+          console.log(error, "error");
+
+          return false;
+        }
+      }
+
+      return false;
     },
   },
 };

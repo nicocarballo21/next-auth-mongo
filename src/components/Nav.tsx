@@ -1,6 +1,6 @@
 "use client";
 import {Button} from "@nextui-org/react";
-import {signOut, useSession} from "next-auth/react";
+import {signIn, signOut, useSession} from "next-auth/react";
 import Link from "next/link";
 import React from "react";
 
@@ -31,10 +31,18 @@ export default function Nav() {
                 Sign in
               </Button>
             </Link>
+            <Button fullWidth color="secondary" size="sm" onClick={() => signIn("github")}>
+              Sign in with github
+            </Button>
           </>
         ) : (
           <>
-            <span>{session.user?.name}</span>
+            <span className="rounded-md bg-green-200 p-2 text-sm text-black">
+              {session.user?.name}
+            </span>
+            <span className="rounded-md bg-green-200 p-2 text-sm text-black">
+              {session.user?.email}
+            </span>
             <Link href="/api/auth/signout">
               <Button fullWidth color="danger" size="sm" onClick={() => signOut()}>
                 Logout
